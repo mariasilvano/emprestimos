@@ -1,9 +1,6 @@
 package com.projeto.emprestimos.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
@@ -14,12 +11,18 @@ public class Emprestimo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long equipamentoId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Equipamento equipamento;
 
-    private Long colaboradorId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Colaborador colaborador;
 
+    @Column(nullable = false)
     private LocalDate dataEmprestimo;
 
+    @Column(nullable = false)
     private LocalDate dataPrevistaDevolucao;
 
     private LocalDate dataDevolucao;
@@ -32,12 +35,12 @@ public class Emprestimo {
         return id;
     }
 
-    public Long getEquipamentoId() {
-        return equipamentoId;
+    public Equipamento getEquipamento() {
+        return equipamento;
     }
 
-    public Long getColaboradorId() {
-        return colaboradorId;
+    public Colaborador getColaborador() {
+        return colaborador;
     }
 
     public LocalDate getDataEmprestimo() {
@@ -52,8 +55,20 @@ public class Emprestimo {
         return dataDevolucao;
     }
 
-    public Emprestimo(Long equipamentoId, Long colaboradorId, LocalDate hoje){
+    public Emprestimo(Equipamento equipamento, Colaborador colaborador,
+                      LocalDate hoje, int prazoEmDias) {
+        this.equipamento = equipamento;
+        this.colaborador = colaborador;
+        this.dataEmprestimo = hoje;
+        this.dataPrevistaDevolucao = hoje.plusDays(prazoEmDias);
+    }
 
+    public void setEquipamento(Equipamento equipamento) {
+        this.equipamento = equipamento;
+    }
+
+    public void setColaborador(Colaborador colaborador) {
+        this.colaborador = colaborador;
     }
 
     public void devolver(LocalDate data){

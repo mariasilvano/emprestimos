@@ -1,5 +1,7 @@
 package com.projeto.emprestimos.service;
 
+import com.projeto.emprestimos.exception.ConflitoException;
+import com.projeto.emprestimos.exception.NaoEncontradoException;
 import com.projeto.emprestimos.model.Equipamento;
 import com.projeto.emprestimos.model.TipoEquipamento;
 import com.projeto.emprestimos.repository.EmprestimoRepository;
@@ -38,12 +40,12 @@ public class EquipamentoService {
 
     public Equipamento buscar(Long id){
         return equipamentoRepository.findById(id).orElseThrow(()->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipamento não encontrado!"));
+                new NaoEncontradoException( "Equipamento não encontrado!"));
     }
 
     public Equipamento cadastrar(Equipamento equipamento){
         if(equipamentoRepository.existsByPatrimonio(equipamento.getPatrimonio())){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Patrimônio já cadastrado");
+            throw new ConflitoException("Patrimônio já cadastrado");
         }
 
         equipamento.setDisponivel(true);
@@ -60,4 +62,20 @@ public class EquipamentoService {
         //salva os novos dados
         return equipamentoRepository.save(encontrado);
     }
+
+    public boolean temEmprestimo(Long id){
+        return emprestimoRepository.existsByEquipamentoId(id);
+    }
+
+    public void remover(Long id){
+        Equipamento encontrado = buscar(id);//busca o equipamento que deve ser deletado
+        if (temEmprestimo(id)){
+
+        }
+
+
+    }
+
+
+
 }
