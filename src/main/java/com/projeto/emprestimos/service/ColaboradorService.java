@@ -28,7 +28,7 @@ public class ColaboradorService {
     public Colaborador cadastrar(Colaborador colaborador){
 
         if(colaboradorRepository.existsByEmail(colaborador.getEmail())){
-            throw new ConflitoException("E-mail já cadastradp!");
+            throw new ConflitoException("E-mail já cadastrado!");
         }
 
         return colaboradorRepository.save(colaborador);

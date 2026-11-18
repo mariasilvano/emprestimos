@@ -35,7 +35,7 @@ public class EquipamentoController {
     }
 
     @PutMapping("/{id}")
-    public Equipamento atualizar(@PathVariable Long id, @RequestBody @Valid Equipamento dados){
+    public Equipamento atualizar(@PathVariable Long id, @RequestBody Equipamento dados){
         return service.atualizar(id, dados);
     }
 

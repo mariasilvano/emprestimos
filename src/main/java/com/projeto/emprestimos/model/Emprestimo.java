@@ -1,8 +1,6 @@
 package com.projeto.emprestimos.model;
 
 import jakarta.persistence.*;
-import org.springframework.cglib.core.Local;
-
 import java.time.LocalDate;
 
 @Entity
@@ -26,6 +24,8 @@ public class Emprestimo {
     private LocalDate dataPrevistaDevolucao;
 
     private LocalDate dataDevolucao;
+
+    private static final int PRAZO_EM_DIAS = 14;
 
     public Emprestimo (){
 
@@ -55,12 +55,11 @@ public class Emprestimo {
         return dataDevolucao;
     }
 
-    public Emprestimo(Equipamento equipamento, Colaborador colaborador,
-                      LocalDate hoje, int prazoEmDias) {
+    public Emprestimo(Equipamento equipamento, Colaborador colaborador, LocalDate hoje) {
         this.equipamento = equipamento;
         this.colaborador = colaborador;
         this.dataEmprestimo = hoje;
-        this.dataPrevistaDevolucao = hoje.plusDays(prazoEmDias);
+        this.dataPrevistaDevolucao = hoje.plusDays(PRAZO_EM_DIAS);
     }
 
     public void setEquipamento(Equipamento equipamento) {
@@ -72,11 +71,14 @@ public class Emprestimo {
     }
 
     public void devolver(LocalDate data){
+        if (dataDevolucao != null) {
+            throw new IllegalStateException("Empréstimo já devolvido");
+        }
         this.dataDevolucao = data;
     }
 
     public boolean estaAtrasadoEm(LocalDate data){
-        return data.isAfter(this.dataPrevistaDevolucao);
+        return dataDevolucao == null && data.isAfter(dataPrevistaDevolucao);
     }
 
     public boolean isAtrasado(){

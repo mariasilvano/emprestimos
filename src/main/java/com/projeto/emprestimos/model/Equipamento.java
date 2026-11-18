@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-
 @Entity
 public class Equipamento {
 
@@ -73,10 +72,11 @@ public class Equipamento {
     }
 
     public void emprestar(){
-
+        if (!disponivel) throw  new IllegalStateException("Equipamento indisponível");
+        this.disponivel = false;
     }
 
-    public void devolver(){
-
+    public void devolver() {
+        this.disponivel = true;
     }
 }

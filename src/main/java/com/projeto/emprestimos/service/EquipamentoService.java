@@ -55,6 +55,13 @@ public class EquipamentoService {
     public Equipamento atualizar(Long id, Equipamento dados){
         Equipamento encontrado = buscar(id);//busca o equipamento que deve ser atualizado
 
+        if (dados.getNome() == null || dados.getNome().isBlank()) {
+            throw new IllegalArgumentException("O nome é obrigatório!");
+        }
+        if (dados.getTipo() == null) {
+            throw new IllegalArgumentException("O tipo é obrigatório!");
+        }
+
         //modifica os dados do equipamento
         encontrado.setNome(dados.getNome());
         encontrado.setTipo(dados.getTipo());
@@ -68,14 +75,11 @@ public class EquipamentoService {
     }
 
     public void remover(Long id){
-        Equipamento encontrado = buscar(id);//busca o equipamento que deve ser deletado
+        Equipamento encontrado = buscar(id);
         if (temEmprestimo(id)){
-
+            throw new ConflitoException("Equipamento já teve empréstimo e não pode ser removido");
         }
-
-
+        equipamentoRepository.delete(encontrado);
     }
-
-
 
 }
