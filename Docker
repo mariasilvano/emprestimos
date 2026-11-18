@@ -1,7 +1,7 @@
 # Etapa 1: compilar
 FROM maven:3-eclipse-temurin-25 AS build
 WORKDIR /app
-COPY . .
+COPY src .
 RUN mvn -q -DskipTests package
 # Etapa 2: rodar
 FROM eclipse-temurin:25-jre
