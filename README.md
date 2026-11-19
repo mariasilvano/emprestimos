@@ -12,6 +12,7 @@ API REST para controlar o empréstimo de equipamentos (notebooks, monitores, mou
 
 - Java 25
 - Spring Boot 4.1.2 (Web MVC, Data JPA, Validation, Actuator)
+- Spring Security com JWT (jjwt)
 - Banco H2
 - Maven
 - JUnit 5 e MockMvc
@@ -48,6 +49,25 @@ Os testes usam um banco H2 em memória (`src/test/resources/application.properti
 ### Console do H2 (somente local)
 `http://localhost:8080/h2-console`, com a URL JDBC `jdbc:h2:file:./dados/emprestimos`. No Render o console fica desabilitado.
 
+## Autenticação (Spring Security + JWT)
+
+Todas as rotas exigem token, exceto `/auth/login`, o Swagger (`/swagger-ui.html`) e o console do H2.
+
+1. Faça login: `POST /auth/login` com o corpo `{"usuario":"admin","senha":"admin123"}`. A resposta traz `{"token":"..."}`.
+2. Envie o token em cada requisição, no cabeçalho `Authorization: Bearer <token>`.
+
+| Usuário | Senha | Perfil | Pode |
+|---|---|---|---|
+| `admin` | `admin123` | ADMIN | Tudo: cadastrar, atualizar e remover equipamentos e colaboradores, além de emprestar e devolver |
+| `colaborador` | `colab123` | COLABORADOR | Listar e buscar, emprestar e devolver |
+
+- Sem token (ou token inválido ou vencido): **401**.
+- Com token, mas sem permissão para a ação (por exemplo, colaborador cadastrando equipamento): **403**.
+- As senhas ficam salvas com BCrypt e os usuários ficam em memória. O token vale 2 horas.
+- O segredo que assina o token vem da variável de ambiente `JWT_SEGREDO`. No Render ela é configurada em *Environment*; localmente vale um valor padrão de desenvolvimento.
+
+No Postman, coloque o token na aba *Authorization* → *Bearer Token*.
+
 ## Rotas
 
 ### Colaboradores
@@ -83,21 +103,32 @@ Tipos aceitos: `NOTEBOOK`, `MONITOR`, `MOUSE`, `TECLADO`, `HEADSET`, `OUTRO`.
 ### Exemplos
 
 ```bash
+# Login (guarde o token da resposta em TOKEN)
+curl -X POST https://emprestimos-uscn.onrender.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"usuario":"admin","senha":"admin123"}'
+
+TOKEN="cole-o-token-aqui"
+
 # Cadastrar equipamento
 curl -X POST https://emprestimos-uscn.onrender.com/equipamentos \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"patrimonio":"NB-001","nome":"Notebook Dell","tipo":"NOTEBOOK"}'
 
 # Cadastrar colaborador
 curl -X POST https://emprestimos-uscn.onrender.com/colaboradores \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"nome":"Ana","email":"ana@empresa.com","cargo":"Analista"}'
 
 # Emprestar (os ids vão na URL, sem corpo)
-curl -X POST "https://emprestimos-uscn.onrender.com/emprestimos?equipamentoId=1&colaboradorId=1"
+curl -X POST "https://emprestimos-uscn.onrender.com/emprestimos?equipamentoId=1&colaboradorId=1" \
+  -H "Authorization: Bearer $TOKEN"
 
 # Devolver
-curl -X PUT https://emprestimos-uscn.onrender.com/emprestimos/1/devolucao
+curl -X PUT https://emprestimos-uscn.onrender.com/emprestimos/1/devolucao \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ## Regras de negócio
@@ -120,11 +151,14 @@ curl -X PUT https://emprestimos-uscn.onrender.com/emprestimos/1/devolucao
 | Status | Quando |
 |---|---|
 | 400 | Dados inválidos (com a lista dos campos), tipo inexistente ou corpo inválido |
+| 401 | Sem token, token inválido ou vencido, ou login com senha errada |
+| 403 | Token válido, mas o perfil não tem permissão para a ação |
 | 404 | Equipamento, colaborador ou empréstimo não encontrado |
 | 409 | Violação de regra de negócio (R1, R3, R4, R6, R9, R10) |
 
 ## Bônus implementados
 
+- **Spring Security com JWT (Nível 3):** login em `POST /auth/login`, perfis ADMIN e COLABORADOR, senhas com BCrypt, `401` e `403`
 - **Swagger:** documentação interativa em `/swagger-ui.html`
 - **Actuator:** saúde da aplicação em `/actuator/health`
 - **Validação:** `@NotBlank`, `@Email` e `@NotNull`, com `400` listando os campos inválidos
@@ -137,7 +171,7 @@ curl -X PUT https://emprestimos-uscn.onrender.com/emprestimos/1/devolucao
 
 - `EquipamentoTest`: 3 testes unitários (regra R4 e devolução)
 - `EmprestimoTest`: 7 testes unitários (R5, R6, R7 e R8)
-- `EmprestimoIntegracaoTest`: 4 testes de integração com MockMvc
+- `EmprestimoIntegracaoTest`: 4 testes de integração com MockMvc (rodam como um ADMIN simulado com `@WithMockUser`)
 
 ## Estrutura
 
@@ -147,7 +181,8 @@ src/main/java/com/projeto/emprestimos/
 ├── service/      regras de negócio
 ├── repository/   acesso ao banco (Spring Data JPA)
 ├── model/        entidades (Equipamento, Colaborador, Emprestimo)
-├── dto/          EmprestimoRequest e EmprestimoResponse
+├── dto/          EmprestimoRequest, EmprestimoResponse, LoginRequest e TokenResposta
+├── security/     SecurityConfig, TokenService e FiltroJwt (JWT)
 └── exception/    exceções e tratador de erros
 ```
 ## Autora
