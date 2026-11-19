@@ -6,6 +6,8 @@ API REST para controlar o empréstimo de equipamentos (notebooks, monitores, mou
 
 **API no ar (Render):** https://emprestimos-uscn.onrender.com
 
+**Vídeo de demonstração:** https://youtu.be/8yG46ZK1084
+
 > No plano gratuito do Render o serviço dorme após 15 minutos parado. A primeira requisição depois disso pode levar cerca de um minuto para responder. Os dados ficam em um banco H2, que é zerado a cada reinício ou novo deploy.
 
 ## Tecnologias
