@@ -56,6 +56,10 @@ Todas as rotas exigem token, exceto `/auth/login`, o Swagger (`/swagger-ui.html`
 1. Faça login: `POST /auth/login` com o corpo `{"usuario":"admin","senha":"admin123"}`. A resposta traz `{"token":"..."}`.
 2. Envie o token em cada requisição, no cabeçalho `Authorization: Bearer <token>`.
 
+### Usuários para fins de teste
+
+Os dois usuários abaixo existem só para testar a API e a avaliação do projeto. Ficam em memória, definidos no `SecurityConfig`.
+
 | Usuário | Senha | Perfil | Pode |
 |---|---|---|---|
 | `admin` | `admin123` | ADMIN | Tudo: cadastrar, atualizar e remover equipamentos e colaboradores, além de emprestar e devolver |
